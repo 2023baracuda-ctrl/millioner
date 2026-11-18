@@ -1,0 +1,919 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Кто хочет стать миллионером (лей-эдишн)</title>
+<style>
+:root{
+  --bg1:#020024;
+  --bg2:#090979;
+  --bg3:#00d4ff;
+  --gold:#ffcc33;
+  --gold-dark:#b8860b;
+  --panel:#0a1033;
+  --panel-border:#2a4fd0;
+  --text:#fff;
+  --danger:#ff4d4d;
+  --safe:#33ff99;
+  color-scheme: dark;
+}
+*{box-sizing:border-box;}
+html,body{height:100%;}
+body{
+  margin:0;
+  font-family:'Segoe UI',Tahoma,Arial,sans-serif;
+  background:radial-gradient(ellipse at center, var(--bg2) 0%, var(--bg1) 70%);
+  color:var(--text);
+  min-height:100%;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+  user-select:none;
+  -webkit-user-select:none;
+  overflow-x:hidden;
+}
+.screen{display:none; padding:20px; max-width:1100px; margin:0 auto;}
+.screen.active{display:block;}
+h1{
+  text-align:center;
+  font-size:clamp(22px,5vw,40px);
+  color:var(--gold);
+  text-shadow:0 0 15px rgba(255,204,51,.6);
+  margin-bottom:4px;
+}
+.subtitle{text-align:center;color:#9db4ff;margin-bottom:20px;font-size:14px;}
+
+/* START SCREEN */
+.card{
+  background:linear-gradient(180deg, rgba(10,16,51,.9), rgba(10,16,51,.6));
+  border:1px solid var(--panel-border);
+  border-radius:16px;
+  padding:20px;
+  margin-bottom:16px;
+  box-shadow:0 0 20px rgba(42,79,208,.3);
+}
+.card h3{margin-top:0;color:var(--gold);font-size:16px;}
+.row{display:flex;flex-wrap:wrap;gap:12px;align-items:center;justify-content:space-between;margin:10px 0;}
+.row label{flex:1;min-width:180px;}
+select, input[type=number], input[type=text], input[type=password], textarea{
+  background:#0e1540;color:#fff;border:1px solid var(--panel-border);
+  border-radius:8px;padding:8px 10px;font-size:14px;
+}
+textarea{width:100%;min-height:140px;font-family:monospace;font-size:12px;}
+.toggle{
+  position:relative;width:50px;height:26px;background:#2a2a55;border-radius:999px;cursor:pointer;flex-shrink:0;
+  transition:.2s;
+}
+.toggle.on{background:#2db34a;}
+.toggle::after{
+  content:'';position:absolute;top:3px;left:3px;width:20px;height:20px;border-radius:50%;background:#fff;transition:.2s;
+}
+.toggle.on::after{left:27px;}
+button{
+  cursor:pointer;border:none;border-radius:10px;padding:12px 20px;font-size:15px;font-weight:600;
+  background:linear-gradient(180deg,#2a4fd0,#162a80);color:#fff;transition:.15s;
+}
+button:hover{filter:brightness(1.15);}
+button:active{transform:scale(.97);}
+button.gold{background:linear-gradient(180deg,var(--gold),var(--gold-dark));color:#241a00;}
+button.danger{background:linear-gradient(180deg,#ff6b6b,#a01818);}
+button.ghost{background:transparent;border:1px solid var(--panel-border);}
+button:disabled{opacity:.4;cursor:not-allowed;}
+.btnrow{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:16px;}
+
+/* GAME SCREEN */
+.game-layout{display:grid;grid-template-columns:1fr 220px;gap:16px;}
+@media (max-width:820px){.game-layout{grid-template-columns:1fr;}}
+.ladder{
+  background:rgba(10,16,51,.85);border:1px solid var(--panel-border);border-radius:14px;
+  padding:10px;max-height:70vh;overflow-y:auto;
+}
+.ladder-item{
+  display:flex;justify-content:space-between;padding:6px 10px;border-radius:6px;font-size:13px;margin-bottom:2px;
+  color:#aab8ff;
+}
+.ladder-item.current{background:var(--gold);color:#241a00;font-weight:700;box-shadow:0 0 10px var(--gold);}
+.ladder-item.passed{color:var(--safe);}
+.ladder-item.safe{text-decoration:underline;}
+
+.top-info{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;flex-wrap:wrap;gap:8px;}
+.timer{
+  font-size:28px;font-weight:700;color:var(--gold);min-width:60px;text-align:center;
+  padding:4px 14px;border:2px solid var(--gold);border-radius:10px;
+}
+.timer.warn{color:var(--danger);border-color:var(--danger);animation:pulse 1s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:.4;}}
+
+.lifelines{display:flex;gap:10px;}
+.lifeline-btn{
+  width:50px;height:50px;border-radius:50%;background:#162a80;border:2px solid var(--gold);
+  display:flex;align-items:center;justify-content:center;font-size:18px;cursor:pointer;
+}
+.lifeline-btn.used{opacity:.25;cursor:not-allowed;filter:grayscale(1);}
+
+.question-box{
+  background:linear-gradient(180deg,#0e1540,#060a28);border:2px solid var(--gold);border-radius:16px;
+  padding:20px;text-align:center;font-size:clamp(16px,2.6vw,22px);min-height:90px;display:flex;align-items:center;justify-content:center;
+  box-shadow:0 0 25px rgba(255,204,51,.25);margin-bottom:16px;
+}
+.answers{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+@media (max-width:600px){.answers{grid-template-columns:1fr;}}
+.answer{
+  background:#0e1540;border:2px solid var(--panel-border);border-radius:12px;padding:14px;text-align:left;
+  font-size:15px;cursor:pointer;transition:.15s;display:flex;gap:10px;
+}
+.answer:hover{border-color:var(--gold);}
+.answer .letter{color:var(--gold);font-weight:700;}
+.answer.removed{opacity:0;pointer-events:none;}
+.answer.selected{background:#4a3a00;border-color:var(--gold);animation:blink 1s infinite;}
+.answer.correct{background:#0d4d1f !important;border-color:var(--safe) !important;}
+.answer.wrong{background:#5a0f0f !important;border-color:var(--danger) !important;}
+@keyframes blink{0%,100%{opacity:1;}50%{opacity:.5;}}
+.audience-chart{display:flex;gap:10px;margin-top:10px;align-items:flex-end;height:70px;}
+.audience-bar{flex:1;background:var(--gold);border-radius:4px 4px 0 0;position:relative;display:flex;align-items:flex-end;justify-content:center;color:#241a00;font-size:11px;font-weight:700;}
+.friend-box{background:#14204f;border:1px dashed var(--gold);padding:10px;border-radius:10px;margin-top:10px;font-size:13px;}
+
+/* END SCREEN */
+.result-amount{font-size:clamp(30px,7vw,54px);color:var(--gold);text-align:center;text-shadow:0 0 20px rgba(255,204,51,.7);}
+
+/* ADMIN */
+.q-list-item{border:1px solid var(--panel-border);border-radius:10px;padding:10px;margin-bottom:8px;}
+.q-list-item .opts{font-size:12px;color:#aab8ff;margin:4px 0;}
+.hidden{display:none !important;}
+.small{font-size:12px;color:#8ea0e0;}
+#devBlockOverlay{
+  position:fixed;inset:0;background:#000;z-index:9999;display:flex;align-items:center;justify-content:center;
+  text-align:center;font-size:18px;padding:20px;
+}
+</style>
+</head>
+<body>
+
+<div id="devBlockOverlay" class="hidden">
+  <div>⚠️ Игра на паузе — окно неактивно или открыты инструменты разработчика.<br><br>
+  <button onclick="resumeFromBlock()">Продолжить</button></div>
+</div>
+
+<!-- START SCREEN -->
+<div class="screen active" id="screen-start">
+  <h1>💰 Кто хочет стать миллионером?</h1>
+  <div class="subtitle">лей-эдишн · призовой фонд 200 MDL</div>
+
+  <div class="card">
+    <h3>⚙️ Настройки игры</h3>
+    <div class="row">
+      <label>Количество вопросов (1–15)</label>
+      <input type="number" id="optQCount" min="1" max="15" value="15">
+    </div>
+    <div class="row">
+      <label>Перемешивать вопросы</label>
+      <div class="toggle on" id="optShuffleQ" onclick="toggleEl(this)"></div>
+    </div>
+    <div class="row">
+      <label>Перемешивать варианты ответов</label>
+      <div class="toggle on" id="optShuffleA" onclick="toggleEl(this)"></div>
+    </div>
+    <div class="row">
+      <label>Таймер на вопрос</label>
+      <div class="toggle on" id="optTimer" onclick="toggleEl(this)"></div>
+    </div>
+    <div class="row">
+      <label>Время на вопрос (сек)</label>
+      <input type="number" id="optTimerSec" min="5" max="120" value="30">
+    </div>
+    <div class="row">
+      <label>Звук</label>
+      <div class="toggle on" id="optSound" onclick="toggleEl(this)"></div>
+    </div>
+    <div class="row">
+      <label>Подсказка «50/50»</label>
+      <div class="toggle on" id="optLL5050" onclick="toggleEl(this)"></div>
+    </div>
+    <div class="row">
+      <label>Подсказка «Звонок другу»</label>
+      <div class="toggle on" id="optLLFriend" onclick="toggleEl(this)"></div>
+    </div>
+    <div class="row">
+      <label>Подсказка «Помощь зала»</label>
+      <div class="toggle on" id="optLLAudience" onclick="toggleEl(this)"></div>
+    </div>
+    <div class="row">
+      <label>Защита от сворачивания/devtools (анти-читы)</label>
+      <div class="toggle on" id="optAntiCheat" onclick="toggleEl(this)"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>👤 Игрок</h3>
+    <div class="row">
+      <label>Имя</label>
+      <input type="text" id="playerName" placeholder="Слава" value="Игрок">
+    </div>
+  </div>
+
+  <div class="btnrow">
+    <button class="gold" onclick="startGame()">▶ Начать игру</button>
+    <button class="ghost" onclick="openAdmin()">🛠 Редактор вопросов</button>
+    <button class="ghost" onclick="showLeaderboard()">🏆 Таблица рекордов</button>
+  </div>
+  <p class="small" style="text-align:center;margin-top:10px;">Вопросов в базе: <span id="qbankCount">0</span></p>
+</div>
+
+<!-- GAME SCREEN -->
+<div class="screen" id="screen-game">
+  <div class="top-info">
+    <div>Игрок: <b id="gPlayerName"></b></div>
+    <div class="timer" id="gTimer">30</div>
+    <div class="lifelines">
+      <div class="lifeline-btn" id="ll-5050" onclick="useLifeline('5050')" title="50 на 50">50:50</div>
+      <div class="lifeline-btn" id="ll-friend" onclick="useLifeline('friend')" title="Звонок другу">📞</div>
+      <div class="lifeline-btn" id="ll-audience" onclick="useLifeline('audience')" title="Помощь зала">👥</div>
+    </div>
+  </div>
+
+  <div class="game-layout">
+    <div>
+      <div class="question-box" id="questionText">Вопрос появится здесь</div>
+      <div class="answers" id="answersBox"></div>
+      <div id="friendBox" class="friend-box hidden"></div>
+      <div id="audienceBox" class="audience-chart hidden"></div>
+      <div class="btnrow">
+        <button class="danger" onclick="walkAway()">💵 Забрать деньги</button>
+      </div>
+    </div>
+    <div class="ladder" id="ladderBox"></div>
+  </div>
+</div>
+
+<!-- END SCREEN -->
+<div class="screen" id="screen-end">
+  <h1 id="endTitle">Игра окончена</h1>
+  <div class="result-amount" id="endAmount">0 MDL</div>
+  <p style="text-align:center" id="endDesc"></p>
+  <div class="btnrow">
+    <button class="gold" onclick="backToStart()">↩ В главное меню</button>
+  </div>
+</div>
+
+<!-- LEADERBOARD -->
+<div class="screen" id="screen-leaders">
+  <h1>🏆 Рекорды</h1>
+  <div class="card" id="leadersList"></div>
+  <div class="btnrow">
+    <button class="danger" onclick="clearLeaders()">Очистить</button>
+    <button class="ghost" onclick="backToStart()">↩ Назад</button>
+  </div>
+</div>
+
+<!-- ADMIN SCREEN -->
+<div class="screen" id="screen-admin">
+  <h1>🛠 Редактор вопросов</h1>
+  <div class="card" id="adminLockBox">
+    <h3>Доступ</h3>
+    <p class="small">Это просто лёгкая защита от случайного открытия — не настоящий пароль безопасности.</p>
+    <div class="row">
+      <input type="password" id="adminPass" placeholder="Пароль (по умолчанию: 1234)">
+      <button class="gold" onclick="unlockAdmin()">Войти</button>
+    </div>
+  </div>
+
+  <div id="adminContent" class="hidden">
+    <div class="card">
+      <h3>➕ Добавить вопрос</h3>
+      <div class="row"><label>Текст вопроса</label><input type="text" id="newQText" style="flex:2"></div>
+      <div class="row"><label>Вариант A (правильный)</label><input type="text" id="newQ_correct" style="flex:2"></div>
+      <div class="row"><label>Вариант B</label><input type="text" id="newQ_b" style="flex:2"></div>
+      <div class="row"><label>Вариант C</label><input type="text" id="newQ_c" style="flex:2"></div>
+      <div class="row"><label>Вариант D</label><input type="text" id="newQ_d" style="flex:2"></div>
+      <div class="row"><label>Сложность (1 легко – 15 сложно)</label><input type="number" id="newQ_diff" min="1" max="15" value="1"></div>
+      <button class="gold" onclick="addQuestion()">Добавить в базу</button>
+    </div>
+
+    <div class="card">
+      <h3>📋 Текущие вопросы (<span id="qCountAdmin">0</span>)</h3>
+      <div id="qListAdmin"></div>
+    </div>
+
+    <div class="card">
+      <h3>📦 Импорт / Экспорт (JSON)</h3>
+      <p class="small">Самый быстрый способ добавить сразу много вопросов: вставь JSON-массив объектов вида
+      <code>{"q":"текст","answers":["правильный","неверный","неверный","неверный"],"difficulty":1}</code> (первый ответ в массиве — всегда правильный) и нажми «Импортировать».</p>
+      <textarea id="importBox" placeholder='[{"q":"Сколько будет 2+2?","answers":["4","5","3","100"],"difficulty":1}]'></textarea>
+      <div class="btnrow">
+        <button class="gold" onclick="importQuestions()">⬇ Импортировать</button>
+        <button class="ghost" onclick="exportQuestions()">⬆ Экспортировать текущие в это поле</button>
+        <button class="ghost" onclick="downloadQuestions()">💾 Скачать questions.json</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3>💰 Призовая лестница</h3>
+      <p class="small">Суммы для каждого уровня (можно менять). Сохраняется в этом браузере.</p>
+      <div id="ladderEditor"></div>
+      <button class="gold" onclick="saveLadder()">Сохранить лестницу</button>
+      <button class="ghost" onclick="resetLadder()">Сбросить по умолчанию (200 MDL)</button>
+    </div>
+
+    <div class="btnrow">
+      <button class="danger" onclick="resetAllData()">⚠ Сбросить всё к заводским настройкам</button>
+    </div>
+  </div>
+
+  <div class="btnrow">
+    <button class="ghost" onclick="backToStart()">↩ Назад</button>
+  </div>
+</div>
+
+<script>
+/* ============== ДАННЫЕ ПО УМОЛЧАНИЮ ============== */
+
+// Призовая лестница на 15 уровней, итог = 200 MDL (как в оригинальной игре,
+// сумма растёт от уровня к уровню, выдаётся сумма ДОСТИГНУТОГО уровня, а не сумма всех).
+const DEFAULT_LADDER = [
+  {level:1, amount:1,  safe:false},
+  {level:2, amount:2,  safe:false},
+  {level:3, amount:3,  safe:false},
+  {level:4, amount:5,  safe:false},
+  {level:5, amount:10, safe:true},
+  {level:6, amount:15, safe:false},
+  {level:7, amount:20, safe:false},
+  {level:8, amount:30, safe:false},
+  {level:9, amount:45, safe:false},
+  {level:10,amount:60, safe:true},
+  {level:11,amount:80, safe:false},
+  {level:12,amount:100,safe:false},
+  {level:13,amount:130,safe:false},
+  {level:14,amount:160,safe:false},
+  {level:15,amount:200,safe:false},
+];
+
+// "Вопросы для дебилов" — максимально простые/шуточные вопросы.
+// Формат: answers[0] ВСЕГДА правильный ответ (при показе перемешивается).
+const DEFAULT_QUESTIONS = [
+  {q:"Сколько будет 2 + 2?", answers:["4","5","22","3"], difficulty:1},
+  {q:"Какого цвета небо в ясный день?", answers:["Голубое","Зелёное","Фиолетовое","Чёрное"], difficulty:1},
+  {q:"Сколько дней в неделе?", answers:["7","5","10","6"], difficulty:1},
+  {q:"Столица Молдовы?", answers:["Кишинёв","Бухарест","Киев","Одесса"], difficulty:1},
+  {q:"Сколько ног у человека?", answers:["2","4","3","1"], difficulty:1},
+  {q:"Какое животное говорит «мяу»?", answers:["Кошка","Собака","Корова","Утка"], difficulty:2},
+  {q:"Сколько месяцев в году?", answers:["12","10","24","6"], difficulty:2},
+  {q:"Чем едят суп?", answers:["Ложкой","Вилкой","Руками","Ножом"], difficulty:2},
+  {q:"Что светит днём на небе?", answers:["Солнце","Луна","Звёзды","Фонарь"], difficulty:3},
+  {q:"Сколько колёс у стандартного легкового автомобиля?", answers:["4","2","6","8"], difficulty:3},
+  {q:"Какой праздник отмечают 1 января?", answers:["Новый год","День рождения","Пасха","Хэллоуин"], difficulty:4},
+  {q:"Из чего делают яичницу?", answers:["Из яиц","Из молока","Из муки","Из воды"], difficulty:4},
+  {q:"Сколько букв в слове «кот»?", answers:["3","2","4","5"], difficulty:5},
+  {q:"Какой знак ставится в конце вопроса?", answers:["Вопросительный (?)","Точка (.)","Запятая (,)","Тире (-)"], difficulty:5},
+  {q:"Что нужно сделать, прежде чем переходить дорогу?", answers:["Посмотреть по сторонам","Закрыть глаза","Побежать","Позвонить маме"], difficulty:6},
+];
+
+/* ============== ХРАНИЛИЩЕ ============== */
+const LS_KEY_Q = "wwtbm_questions_v1";
+const LS_KEY_LADDER = "wwtbm_ladder_v1";
+const LS_KEY_LEADERS = "wwtbm_leaders_v1";
+const LS_KEY_SETTINGS = "wwtbm_settings_v1";
+
+function loadQuestions(){
+  const raw = localStorage.getItem(LS_KEY_Q);
+  if(raw){ try{ return JSON.parse(raw); }catch(e){} }
+  return JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
+}
+function saveQuestionsToStorage(arr){ localStorage.setItem(LS_KEY_Q, JSON.stringify(arr)); }
+
+function loadLadder(){
+  const raw = localStorage.getItem(LS_KEY_LADDER);
+  if(raw){ try{ return JSON.parse(raw); }catch(e){} }
+  return JSON.parse(JSON.stringify(DEFAULT_LADDER));
+}
+function saveLadderToStorage(arr){ localStorage.setItem(LS_KEY_LADDER, JSON.stringify(arr)); }
+
+let QUESTIONS = loadQuestions();
+let LADDER = loadLadder();
+
+// Попытка подгрузить внешний questions.json (если он лежит рядом в репозитории на GitHub Pages)
+// Если файла нет — тихо используем то, что уже загружено (localStorage/дефолт).
+fetch('questions.json').then(r=>{ if(!r.ok) throw 0; return r.json(); }).then(data=>{
+  if(Array.isArray(data) && data.length && !localStorage.getItem(LS_KEY_Q)){
+    QUESTIONS = data;
+    saveQuestionsToStorage(QUESTIONS);
+    document.getElementById('qbankCount').textContent = QUESTIONS.length;
+  }
+}).catch(()=>{});
+
+/* ============== ЗВУК (синтез, без внешних файлов) ============== */
+let audioCtx=null;
+function beep(freq=440, dur=0.15, type='sine', vol=0.15){
+  if(!settings.sound) return;
+  try{
+    if(!audioCtx) audioCtx = new (window.AudioContext||window.webkitAudioContext)();
+    const o = audioCtx.createOscillator();
+    const g = audioCtx.createGain();
+    o.type=type; o.frequency.value=freq;
+    g.gain.value=vol;
+    o.connect(g); g.connect(audioCtx.destination);
+    o.start();
+    g.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime+dur);
+    o.stop(audioCtx.currentTime+dur);
+  }catch(e){}
+}
+const SND = {
+  tick:()=>beep(880,0.05,'square',0.05),
+  correct:()=>{beep(660,0.12);setTimeout(()=>beep(880,0.18),120);},
+  wrong:()=>{beep(180,0.3,'sawtooth',0.2);},
+  select:()=>beep(500,0.08,'triangle',0.08),
+  win:()=>{[523,659,784,1046].forEach((f,i)=>setTimeout(()=>beep(f,0.25),i*150));},
+  lifeline:()=>beep(760,0.1,'triangle',0.1),
+};
+
+/* ============== НАСТРОЙКИ ============== */
+function toggleEl(el){ el.classList.toggle('on'); }
+function toggleState(id){ return document.getElementById(id).classList.contains('on'); }
+
+let settings = {};
+function readSettingsFromUI(){
+  settings = {
+    qCount: Math.max(1, Math.min(15, parseInt(document.getElementById('optQCount').value)||15)),
+    shuffleQ: toggleState('optShuffleQ'),
+    shuffleA: toggleState('optShuffleA'),
+    timer: toggleState('optTimer'),
+    timerSec: Math.max(5, parseInt(document.getElementById('optTimerSec').value)||30),
+    sound: toggleState('optSound'),
+    ll5050: toggleState('optLL5050'),
+    llFriend: toggleState('optLLFriend'),
+    llAudience: toggleState('optLLAudience'),
+    antiCheat: toggleState('optAntiCheat'),
+    playerName: document.getElementById('playerName').value.trim() || "Игрок",
+  };
+  localStorage.setItem(LS_KEY_SETTINGS, JSON.stringify(settings));
+}
+function restoreSettingsToUI(){
+  const raw = localStorage.getItem(LS_KEY_SETTINGS);
+  if(!raw) return;
+  try{
+    const s = JSON.parse(raw);
+    document.getElementById('optQCount').value = s.qCount||15;
+    document.getElementById('optTimerSec').value = s.timerSec||30;
+    document.getElementById('playerName').value = s.playerName||"Игрок";
+    const setTog=(id,val)=>{ const el=document.getElementById(id); el.classList.toggle('on', !!val); };
+    setTog('optShuffleQ', s.shuffleQ);
+    setTog('optShuffleA', s.shuffleA);
+    setTog('optTimer', s.timer);
+    setTog('optSound', s.sound);
+    setTog('optLL5050', s.ll5050);
+    setTog('optLLFriend', s.llFriend);
+    setTog('optLLAudience', s.llAudience);
+    setTog('optAntiCheat', s.antiCheat);
+  }catch(e){}
+}
+
+/* ============== НАВИГАЦИЯ МЕЖДУ ЭКРАНАМИ ============== */
+function showScreen(id){
+  document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+}
+function backToStart(){
+  clearInterval(timerInterval);
+  document.getElementById('qbankCount').textContent = QUESTIONS.length;
+  showScreen('screen-start');
+}
+
+document.getElementById('qbankCount').textContent = QUESTIONS.length;
+restoreSettingsToUI();
+
+/* ============== ИГРОВОЕ СОСТОЯНИЕ ============== */
+let gameQuestions = [];
+let currentIndex = 0;
+let currentAnswers = []; // {text, correct}
+let lifelinesUsed = {5050:false, friend:false, audience:false};
+let timerInterval = null;
+let timeLeft = 0;
+let answered = false;
+
+function shuffleArr(arr){
+  const a = arr.slice();
+  for(let i=a.length-1;i>0;i--){
+    const j = Math.floor(Math.random()*(i+1));
+    [a[i],a[j]]=[a[j],a[i]];
+  }
+  return a;
+}
+
+function startGame(){
+  readSettingsFromUI();
+  if(QUESTIONS.length === 0){
+    alert("В базе нет вопросов! Добавь их в редакторе.");
+    return;
+  }
+  let pool = QUESTIONS.slice().sort((a,b)=>(a.difficulty||1)-(b.difficulty||1));
+  if(settings.shuffleQ) pool = shuffleArr(QUESTIONS);
+  gameQuestions = pool.slice(0, Math.min(settings.qCount, pool.length));
+  currentIndex = 0;
+  lifelinesUsed = {5050:false, friend:false, audience:false};
+  document.getElementById('gPlayerName').textContent = settings.playerName;
+  document.getElementById('ll-5050').classList.toggle('used', !settings.ll5050);
+  document.getElementById('ll-friend').classList.toggle('used', !settings.llFriend);
+  document.getElementById('ll-audience').classList.toggle('used', !settings.llAudience);
+  showScreen('screen-game');
+  renderLadder();
+  loadQuestionToScreen();
+  if(settings.antiCheat) enableAntiCheat(); else disableAntiCheat();
+}
+
+function renderLadder(){
+  const box = document.getElementById('ladderBox');
+  box.innerHTML = '';
+  const total = gameQuestions.length;
+  // применяем масштабированную лестницу под число выбранных вопросов
+  const ladderToUse = getScaledLadder(total);
+  for(let i=total-1;i>=0;i--){
+    const lv = ladderToUse[i];
+    const div = document.createElement('div');
+    div.className = 'ladder-item' + (lv.safe ? ' safe':'');
+    if(i < currentIndex) div.classList.add('passed');
+    if(i === currentIndex) div.classList.add('current');
+    div.innerHTML = `<span>${i+1}</span><span>${lv.amount} MDL${lv.safe?' 🔒':''}</span>`;
+    box.appendChild(div);
+  }
+}
+
+function getScaledLadder(count){
+  // Берём LADDER и подрезаем/растягиваем под нужное число вопросов,
+  // сохраняя рост сумм и финальную сумму = максимум из LADDER.
+  if(count === LADDER.length) return LADDER;
+  const maxAmount = LADDER[LADDER.length-1].amount;
+  const result = [];
+  for(let i=0;i<count;i++){
+    const ratio = (i+1)/count;
+    const srcIdx = Math.min(LADDER.length-1, Math.round(ratio*(LADDER.length-1)));
+    const amount = Math.max(1, Math.round(LADDER[srcIdx].amount * (maxAmount/LADDER[LADDER.length-1].amount)));
+    const safe = (i+1 === Math.round(count*0.33)) || (i+1===Math.round(count*0.66));
+    result.push({level:i+1, amount, safe});
+  }
+  result[result.length-1].amount = maxAmount;
+  return result;
+}
+
+function loadQuestionToScreen(){
+  answered = false;
+  document.getElementById('friendBox').classList.add('hidden');
+  document.getElementById('audienceBox').classList.add('hidden');
+  const q = gameQuestions[currentIndex];
+  document.getElementById('questionText').textContent = q.q;
+
+  let opts = q.answers.map((a,idx)=>({text:a, correct: idx===0}));
+  if(settings.shuffleA) opts = shuffleArr(opts); 
+  currentAnswers = opts;
+
+  const box = document.getElementById('answersBox');
+  box.innerHTML = '';
+  const letters = ['A','B','C','D'];
+  opts.forEach((opt,idx)=>{
+    const d = document.createElement('div');
+    d.className = 'answer';
+    d.dataset.idx = idx;
+    d.innerHTML = `<span class="letter">${letters[idx]}.</span><span>${opt.text}</span>`;
+    d.onclick = ()=>selectAnswer(idx, d);
+    box.appendChild(d);
+  });
+
+  renderLadder();
+  startTimer();
+}
+
+function startTimer(){
+  clearInterval(timerInterval);
+  const tEl = document.getElementById('gTimer');
+  if(!settings.timer){ tEl.style.display='none'; return; }
+  tEl.style.display='block';
+  timeLeft = settings.timerSec;
+  tEl.textContent = timeLeft;
+  tEl.classList.remove('warn');
+  timerInterval = setInterval(()=>{
+    timeLeft--;
+    tEl.textContent = timeLeft;
+    if(timeLeft<=5) tEl.classList.add('warn');
+    if(timeLeft<=5 && timeLeft>0) SND.tick();
+    if(timeLeft<=0){
+      clearInterval(timerInterval);
+      if(!answered) forceTimeout();
+    }
+  },1000);
+}
+
+function forceTimeout(){
+  answered = true;
+  SND.wrong();
+  document.querySelectorAll('.answer').forEach(el=>{
+    const idx = +el.dataset.idx;
+    if(currentAnswers[idx].correct) el.classList.add('correct');
+  });
+  setTimeout(()=> endGame(false, "Время вышло!"), 1400);
+}
+
+function selectAnswer(idx, el){
+  if(answered) return;
+  answered = true;
+  clearInterval(timerInterval);
+  SND.select();
+  el.classList.add('selected');
+  setTimeout(()=>{
+    const correct = currentAnswers[idx].correct;
+    document.querySelectorAll('.answer').forEach(e2=>{
+      const i2 = +e2.dataset.idx;
+      if(currentAnswers[i2].correct) e2.classList.add('correct');
+      else if(i2===idx && !correct) e2.classList.add('wrong');
+    });
+    if(correct){
+      SND.correct();
+      setTimeout(()=>{
+        currentIndex++;
+        if(currentIndex >= gameQuestions.length){
+          endGame(true, "Поздравляем! Вы выиграли главный приз!");
+        } else {
+          loadQuestionToScreen();
+        }
+      }, 1300);
+    } else {
+      SND.wrong();
+      setTimeout(()=> endGame(false, "Неверный ответ!"), 1300);
+    }
+  }, 900);
+}
+
+function walkAway(){
+  if(answered) return;
+  clearInterval(timerInterval);
+  endGame(null, "Вы забрали деньги.");
+}
+
+function endGame(won, msg){
+  clearInterval(timerInterval);
+  disableAntiCheat();
+  const ladderToUse = getScaledLadder(gameQuestions.length);
+  let amount = 0;
+  if(won === true){
+    amount = ladderToUse[ladderToUse.length-1].amount;
+  } else if(won === false){
+    // проигрыш — падаем до ближайшей "несгораемой" суммы ниже текущего уровня
+    let safeAmount = 0;
+    for(let i=currentIndex-1;i>=0;i--){
+      if(ladderToUse[i].safe){ safeAmount = ladderToUse[i].amount; break; }
+    }
+    amount = safeAmount;
+  } else {
+    // забрал деньги — сумма предыдущего уровня
+    amount = currentIndex>0 ? ladderToUse[currentIndex-1].amount : 0;
+  }
+  document.getElementById('endTitle').textContent = won? "🎉 Победа!" : (won===false? "💥 Игра окончена" : "💵 Забрали деньги");
+  document.getElementById('endAmount').textContent = amount + " MDL";
+  document.getElementById('endDesc').textContent = msg;
+  if(won) SND.win();
+  saveLeader(settings.playerName, amount, won);
+  showScreen('screen-end');
+}
+
+/* ============== ПОДСКАЗКИ ============== */
+function useLifeline(type){
+  if(lifelinesUsed[type] || answered) return;
+  if(type==='5050' && !settings.ll5050) return;
+  if(type==='friend' && !settings.llFriend) return;
+  if(type==='audience' && !settings.llAudience) return;
+  lifelinesUsed[type] = true;
+  document.getElementById('ll-'+type).classList.add('used');
+  SND.lifeline();
+
+  if(type==='5050'){
+    const wrongIdxs = currentAnswers.map((a,i)=>({i,correct:a.correct})).filter(x=>!x.correct).map(x=>x.i);
+    const toRemove = shuffleArr(wrongIdxs).slice(0,2);
+    toRemove.forEach(i=>{
+      const el = document.querySelector(`.answer[data-idx="${i}"]`);
+      if(el) el.classList.add('removed');
+    });
+  }
+  if(type==='friend'){
+    const correctIdx = currentAnswers.findIndex(a=>a.correct);
+    const confidentCorrect = Math.random() < 0.8; // друг прав в 80% случаев
+    const idx = confidentCorrect ? correctIdx : currentAnswers.findIndex((a,i)=>!a.correct);
+    const letters=['A','B','C','D'];
+    const conf = 60 + Math.floor(Math.random()*35);
+    const phrases = [
+      `Слушай, я почти уверен, это вариант ${letters[idx]}... на ${conf}%.`,
+      `Думаю, ${letters[idx]} — где-то слышал про это.`,
+      `Ставлю на ${letters[idx]}, но ты сам реши.`,
+    ];
+    document.getElementById('friendBox').textContent = "📞 Друг: " + phrases[Math.floor(Math.random()*phrases.length)];
+    document.getElementById('friendBox').classList.remove('hidden');
+  }
+  if(type==='audience'){
+    const correctIdx = currentAnswers.findIndex(a=>a.correct);
+    let percents = currentAnswers.map(()=>Math.random());
+    percents[correctIdx] += 1.6; // зал склонен угадывать правильно
+    const sum = percents.reduce((a,b)=>a+b,0);
+    percents = percents.map(p=>Math.round(p/sum*100));
+    // коррекция суммы до 100
+    let diff = 100 - percents.reduce((a,b)=>a+b,0);
+    percents[correctIdx]+=diff;
+    const box = document.getElementById('audienceBox');
+    box.innerHTML='';
+    const letters=['A','B','C','D'];
+    percents.forEach((p,i)=>{
+      const bar = document.createElement('div');
+      bar.className='audience-bar';
+      bar.style.height = Math.max(6,p) + '%';
+      bar.textContent = letters[i]+': '+p+'%';
+      box.appendChild(bar);
+    });
+    box.classList.remove('hidden');
+  }
+}
+
+/* ============== АНТИ-ЧИТ / ЗАЩИТА (сдерживающая, не абсолютная) ============== */
+let blocked = false;
+function enableAntiCheat(){
+  document.addEventListener('contextmenu', preventCtx);
+  document.addEventListener('visibilitychange', onVisChange);
+  window.addEventListener('blur', onBlur);
+  document.addEventListener('keydown', blockDevKeys);
+}
+function disableAntiCheat(){
+  document.removeEventListener('contextmenu', preventCtx);
+  document.removeEventListener('visibilitychange', onVisChange);
+  window.removeEventListener('blur', onBlur);
+  document.removeEventListener('keydown', blockDevKeys);
+  document.getElementById('devBlockOverlay').classList.add('hidden');
+}
+function preventCtx(e){ e.preventDefault(); }
+function onVisChange(){ if(document.hidden) pauseForCheat(); }
+function onBlur(){ pauseForCheat(); }
+function pauseForCheat(){
+  if(blocked) return;
+  blocked = true;
+  clearInterval(timerInterval);
+  document.getElementById('devBlockOverlay').classList.remove('hidden');
+}
+function resumeFromBlock(){
+  blocked = false;
+  document.getElementById('devBlockOverlay').classList.add('hidden');
+  if(settings.timer && !answered) startTimer();
+}
+function blockDevKeys(e){
+  if(e.key==='F12' || (e.ctrlKey && e.shiftKey && ['I','J','C'].includes(e.key)) || (e.ctrlKey && e.key==='u')){
+    e.preventDefault();
+    pauseForCheat();
+  }
+}
+
+/* ============== ТАБЛИЦА ЛИДЕРОВ ============== */
+function saveLeader(name, amount, won){
+  const list = JSON.parse(localStorage.getItem(LS_KEY_LEADERS)||'[]');
+  list.push({name, amount, won: !!won, date: new Date().toLocaleString('ru-RU')});
+  list.sort((a,b)=>b.amount-a.amount);
+  localStorage.setItem(LS_KEY_LEADERS, JSON.stringify(list.slice(0,50)));
+}
+function showLeaderboard(){
+  const list = JSON.parse(localStorage.getItem(LS_KEY_LEADERS)||'[]');
+  const box = document.getElementById('leadersList');
+  box.innerHTML = list.length? '' : '<p class="small">Пока пусто — сыграй первую игру!</p>';
+  list.forEach((l,i)=>{
+    const d = document.createElement('div');
+    d.className='row';
+    d.innerHTML = `<span>#${i+1} ${l.name} ${l.won?'🏆':''}</span><span>${l.amount} MDL · ${l.date}</span>`;
+    box.appendChild(d);
+  });
+  showScreen('screen-leaders');
+}
+function clearLeaders(){
+  if(confirm('Очистить таблицу рекордов?')){
+    localStorage.removeItem(LS_KEY_LEADERS);
+    showLeaderboard();
+  }
+}
+
+/* ============== АДМИНКА: ВОПРОСЫ ============== */
+const ADMIN_PASS_KEY = "wwtbm_admin_pass";
+function getAdminPass(){ return localStorage.getItem(ADMIN_PASS_KEY) || "1234"; }
+function openAdmin(){
+  showScreen('screen-admin');
+  document.getElementById('adminContent').classList.add('hidden');
+  document.getElementById('adminLockBox').classList.remove('hidden');
+}
+function unlockAdmin(){
+  const val = document.getElementById('adminPass').value;
+  if(val === getAdminPass()){
+    document.getElementById('adminLockBox').classList.add('hidden');
+    document.getElementById('adminContent').classList.remove('hidden');
+    renderAdminQuestionList();
+    renderLadderEditor();
+  } else {
+    alert('Неверный пароль. По умолчанию: 1234 (можно сменить в коде/консоли через localStorage).');
+  }
+}
+function addQuestion(){
+  const q = document.getElementById('newQText').value.trim();
+  const correct = document.getElementById('newQ_correct').value.trim();
+  const b = document.getElementById('newQ_b').value.trim();
+  const c = document.getElementById('newQ_c').value.trim();
+  const d = document.getElementById('newQ_d').value.trim();
+  const diff = parseInt(document.getElementById('newQ_diff').value)||1;
+  if(!q || !correct || !b || !c || !d){ alert('Заполни все поля!'); return; }
+  QUESTIONS.push({q, answers:[correct,b,c,d], difficulty:diff});
+  saveQuestionsToStorage(QUESTIONS);
+  ['newQText','newQ_correct','newQ_b','newQ_c','newQ_d'].forEach(id=>document.getElementById(id).value='');
+  renderAdminQuestionList();
+  document.getElementById('qbankCount').textContent = QUESTIONS.length;
+}
+function deleteQuestion(idx){
+  if(!confirm('Удалить этот вопрос?')) return;
+  QUESTIONS.splice(idx,1);
+  saveQuestionsToStorage(QUESTIONS);
+  renderAdminQuestionList();
+  document.getElementById('qbankCount').textContent = QUESTIONS.length;
+}
+function renderAdminQuestionList(){
+  document.getElementById('qCountAdmin').textContent = QUESTIONS.length;
+  const box = document.getElementById('qListAdmin');
+  box.innerHTML = '';
+  QUESTIONS.forEach((q,idx)=>{
+    const d = document.createElement('div');
+    d.className='q-list-item';
+    d.innerHTML = `<b>${idx+1}. ${q.q}</b> <span class="small">(сложность ${q.difficulty||1})</span>
+      <div class="opts">✅ ${q.answers[0]} | ${q.answers.slice(1).join(' | ')}</div>
+      <button class="danger" onclick="deleteQuestion(${idx})" style="padding:6px 10px;font-size:12px;">Удалить</button>`;
+    box.appendChild(d);
+  });
+}
+function importQuestions(){
+  const raw = document.getElementById('importBox').value.trim();
+  if(!raw) return;
+  try{
+    const data = JSON.parse(raw);
+    if(!Array.isArray(data)) throw new Error('not array');
+    data.forEach(item=>{
+      if(item.q && Array.isArray(item.answers) && item.answers.length>=2){
+        QUESTIONS.push({q:item.q, answers:item.answers, difficulty:item.difficulty||1});
+      }
+    });
+    saveQuestionsToStorage(QUESTIONS);
+    renderAdminQuestionList();
+    document.getElementById('qbankCount').textContent = QUESTIONS.length;
+    alert('Импортировано! Текущее число вопросов: '+QUESTIONS.length);
+  }catch(e){
+    alert('Ошибка в JSON. Проверь формат.');
+  }
+}
+function exportQuestions(){
+  document.getElementById('importBox').value = JSON.stringify(QUESTIONS, null, 2);
+}
+function downloadQuestions(){
+  const blob = new Blob([JSON.stringify(QUESTIONS, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'questions.json';
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+/* ============== АДМИНКА: ЛЕСТНИЦА ============== */
+function renderLadderEditor(){
+  const box = document.getElementById('ladderEditor');
+  box.innerHTML = '';
+  LADDER.forEach((lv,idx)=>{
+    const row = document.createElement('div');
+    row.className='row';
+    row.innerHTML = `<label>Уровень ${lv.level}</label>
+      <input type="number" value="${lv.amount}" data-idx="${idx}" class="ladderAmountInput" style="width:90px">
+      <label style="flex:0"><input type="checkbox" ${lv.safe?'checked':''} class="ladderSafeInput" data-idx="${idx}"> несгораемая</label>`;
+    box.appendChild(row);
+  });
+}
+function saveLadder(){
+  document.querySelectorAll('.ladderAmountInput').forEach(inp=>{
+    LADDER[+inp.dataset.idx].amount = parseInt(inp.value)||1;
+  });
+  document.querySelectorAll('.ladderSafeInput').forEach(inp=>{
+    LADDER[+inp.dataset.idx].safe = inp.checked;
+  });
+  saveLadderToStorage(LADDER);
+  alert('Лестница сохранена!');
+}
+function resetLadder(){
+  LADDER = JSON.parse(JSON.stringify(DEFAULT_LADDER));
+  saveLadderToStorage(LADDER);
+  renderLadderEditor();
+}
+function resetAllData(){
+  if(!confirm('Это удалит ВСЕ вопросы, лестницу, рекорды и настройки из этого браузера. Продолжить?')) return;
+  localStorage.removeItem(LS_KEY_Q);
+  localStorage.removeItem(LS_KEY_LADDER);
+  localStorage.removeItem(LS_KEY_LEADERS);
+  localStorage.removeItem(LS_KEY_SETTINGS);
+  QUESTIONS = JSON.parse(JSON.stringify(DEFAULT_QUESTIONS));
+  LADDER = JSON.parse(JSON.stringify(DEFAULT_LADDER));
+  renderAdminQuestionList();
+  renderLadderEditor();
+  document.getElementById('qbankCount').textContent = QUESTIONS.length;
+  alert('Сброшено!');
+}
+</script>
+</body>
+</html>
